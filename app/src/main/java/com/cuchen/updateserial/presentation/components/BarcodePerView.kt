@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,7 +42,7 @@ fun BarcodePreview(modifier: Modifier, barCodeString: (String) -> Unit) {
     var preview by remember { mutableStateOf<Preview?>(null) }
     val barCodeVal = remember { mutableStateOf("") }
     var showBarcodeAnalysis by remember { mutableStateOf(false) }
-    Column() {
+    Column {
         Box(
             modifier = modifier
         ) {
@@ -125,9 +126,11 @@ fun BarcodePreview(modifier: Modifier, barCodeString: (String) -> Unit) {
                     fontSize = 30.sp
                 )
             )
-            Button(onClick = {
-                showBarcodeAnalysis = !showBarcodeAnalysis
-            }) {
+            Button(
+                modifier = Modifier.padding(end = 8.dp),
+                onClick = {
+                    showBarcodeAnalysis = !showBarcodeAnalysis
+                }) {
                 Text("바코드 실행")
             }
 

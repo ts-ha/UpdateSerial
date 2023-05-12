@@ -22,6 +22,7 @@ fun DeviceScreen(
     state: BluetoothUiState,
     onStartScan: () -> Unit,
     onStopScan: () -> Unit
+,onClick: (BluetoothDevice) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -30,7 +31,7 @@ fun DeviceScreen(
         BluetoothDeviceList(
             pairedDevices = state.pairedDevices,
             scannedDevices = state.scannedDevices,
-            onClick = {},
+            onClick = {onClick(it)},
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)

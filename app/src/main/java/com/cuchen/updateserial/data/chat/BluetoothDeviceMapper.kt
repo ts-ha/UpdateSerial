@@ -7,7 +7,6 @@ import com.cuchen.updateserial.domin.BluetoothDeviceDomain
 @SuppressLint("MissingPermission")
 fun BluetoothDevice.toBluetoothDeviceDomain(): BluetoothDeviceDomain {
     return BluetoothDeviceDomain(
-        name = name,
-        address = address
+        name = name, address = address
     )
 }
