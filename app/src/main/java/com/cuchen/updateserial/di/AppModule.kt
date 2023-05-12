@@ -76,7 +76,7 @@ object AppModule {
     ): Retrofit = Retrofit.Builder()
         .baseUrl(apiUrl)
         .client(OkHttpClient.Builder().addInterceptor(
-            HttpLoggingInterceptor().setLevel()
+            HttpLoggingInterceptor().setLevel(level = HttpLoggingInterceptor.Level.BODY)
         )
             .build())
         .addConverterFactory(converterFactory)

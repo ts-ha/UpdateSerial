@@ -47,8 +47,8 @@ class SerialViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(BluetoothUiState())
 
-    private var mGithubRepositories: MutableStateFlow<Response> = MutableStateFlow(Response(false))
-    val githubRepositories: StateFlow<Response> get() = mGithubRepositories
+//    private var mGithubRepositories: MutableStateFlow<Response> = MutableStateFlow(Response(false))
+//    val githubRepositories: StateFlow<Response> get() = mGithubRepositories
 
     val state = combine(
         bluetoothController.scannedDevices, bluetoothController.pairedDevices, _state
