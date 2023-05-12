@@ -75,12 +75,10 @@ object AppModule {
         converterFactory: Converter.Factory
     ): Retrofit = Retrofit.Builder()
         .baseUrl(apiUrl)
-        .client(
-            OkHttpClient.Builder().addInterceptor(
-                HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY)
-            )
-                .build()
+        .client(OkHttpClient.Builder().addInterceptor(
+            HttpLoggingInterceptor().setLevel()
         )
+            .build())
         .addConverterFactory(converterFactory)
         .build()
 
