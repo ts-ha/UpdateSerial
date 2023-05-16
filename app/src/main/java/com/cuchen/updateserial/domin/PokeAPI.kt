@@ -1,10 +1,9 @@
 package com.cuchen.updateserial.domin
 
-import coil.request.ErrorResult
 import retrofit2.http.*
 
 interface PokeAPI {
-    @GET("pokemon/")
+   /* @GET("pokemon/")
     suspend fun getPokemons(): Response
 
     @POST("smartcooking/api/updateSerial.action")
@@ -18,13 +17,13 @@ interface PokeAPI {
     suspend fun getPokemons(
         @Query("offset") offset: Int,
         @Query("limit") limit: Int
-    ): Response
+    ): Response*/
 
     @GET("pokemon/{pid}/")
     suspend fun getPokemon(@Path("pid") pid: Int): PokemonResponse
 }
 
-data class Response(
+/*data class Response(
     val count: Int?,
     val previous: String?,
     val next: String?,
@@ -48,7 +47,7 @@ data class Response(
         val url: String,
         val name: String
     )
-}
+}*/
 
 data class PokemonResponse(
     val species: Species,

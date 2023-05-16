@@ -4,6 +4,8 @@ package com.cuchen.updateserial.presentation.components
 import android.annotation.SuppressLint
 import android.bluetooth.le.ScanResult
 import android.util.Log
+import android.util.SparseArray
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -22,14 +24,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.substring
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.util.forEach
 import androidx.core.util.isNotEmpty
+import androidx.core.util.size
 import com.cuchen.updateserial.core.Constants.TAG
 import com.cuchen.updateserial.presentation.SerialViewModel
 import com.cuchen.updateserial.states.DeviceScanViewState
+import com.cuchen.updateserial.utils.toHex2
 
 object DeviceScanCompose {
 
@@ -68,16 +75,26 @@ object DeviceScanCompose {
                     textAlign = TextAlign.End
                 )
                 Button(onClick = {
-                    getManufacturerSpecificData(deviceScanResults)
-//                    viewModel.updateSerial(
-//                        macAddr = deviceScanResults.device?.address ?: "",
-//                        deviceType = deviceScanResults.device?.name?.take(4) ?: "",
-//                        serialNo = barCodeVal
-//                    )
+//                    Log.d(TAG, "ShowDevices: ${getManufacturerSpecificData(deviceScanResults)}")
+                    viewModel.updateSerial(
+                        macAddr = getManufacturerSpecificData(deviceScanResults),
+                        deviceType = deviceScanResults.device?.name?.take(8) ?: "",
+                        serialNo = barCodeVal
+//                        serialNo = "12345678901"
+                    )
+
                 }) {
                     Text(text = "update serial")
                 }
             }
+            UpdateSerialResult(createProfileImageContent = {
+                if (it) {
+                    extracted("update serial ok")
+                    UpdateAlertDialog()
+                } else {
+                    extracted("update serial error")
+                }
+            })
 
             LazyColumn(
                 modifier = Modifier
@@ -90,15 +107,14 @@ object DeviceScanCompose {
                         Column(modifier = Modifier
                             .clickable {
                                 deviceScanResults = scanResults.get(key = key)!!
-                                onClick(deviceScanResults)
-//                                getManufacturerSpecificData(deviceScanResults)
-
                                 deviceName = if (::deviceScanResults.isInitialized) {
-                                    Log.d(TAG, "111 name: ${deviceScanResults.device.name ?: "Unknown"}")
                                     deviceScanResults.device.name ?: "Unknown"
                                 } else {
                                     "Unknown"
                                 }
+
+
+                                onClick(deviceScanResults)
                             }
                             .background(Color.LightGray, shape = RoundedCornerShape(10.dp))
                             .fillMaxWidth()
@@ -121,30 +137,36 @@ object DeviceScanCompose {
         }
     }
 
-    private fun getManufacturerSpecificData(result: ScanResult) {
+    @Composable
+    private fun extracted(text: String) {
+        Text(
+            color = Color.Red,
+            fontSize = 30.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth(),
+            text = text
+        )
+    }
+
+    private fun getManufacturerSpecificData(result: ScanResult): String {
         result.scanRecord?.let {
             val manufacturerSpecificData = it.manufacturerSpecificData
-            Log.d(TAG, "111: ${manufacturerSpecificData.isNotEmpty()}")
-
             if (manufacturerSpecificData.isNotEmpty() && manufacturerSpecificData.get(
                     manufacturerSpecificData.keyAt(0)
                 ).size >= 8
             ) {
-                Log.d(
-                    TAG, "111 size: ${
-                        manufacturerSpecificData.get(
-                            manufacturerSpecificData.keyAt(0)
-                        ).size
-                    }"
-                )
-                Log.d(TAG, "getMefesf: ${manufacturerSpecificData.keyAt(0).toString()}")
+                return manufacturerSpecificData.get(
+                    manufacturerSpecificData.keyAt(0)
+                ).toHex2().takeLast(12)
+            } else {
+                return ""
             }
         }
+        return ""
+    }
 
 
 //        manufacturerSpecificData?.get(manufacturerSpecificData.keyAt(0))
-
-    }
 
 
     @SuppressLint("MissingPermission")
@@ -176,6 +198,7 @@ object DeviceScanCompose {
             }
 
             is DeviceScanViewState.ScanResults -> {
+//                Log.d(TAG, "ShowDevices: ${getManufacturerSpecificData(deviceScanResults)}")
                 ShowDevices(scanResults = deviceScanViewState.scanResults,
                     barCodeVal = barCodeVal,
                     viewModel = viewModel,

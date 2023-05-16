@@ -1,28 +1,36 @@
 package com.cuchen.updateserial.presentation
 
 import android.annotation.SuppressLint
+import android.app.Application
 import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothManager
 import android.bluetooth.le.BluetoothLeScanner
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
+import android.content.Context
 import android.os.Handler
 import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.toLowerCase
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cuchen.updateserial.core.Constants.TAG
-import com.cuchen.updateserial.domin.BluetoothController
 import com.cuchen.updateserial.domin.Response
-import com.cuchen.updateserial.domin.SerialAPI
+import com.cuchen.updateserial.domin.UpdateSerialResponse
+import com.cuchen.updateserial.domin.repository.RemoteRepository
 import com.cuchen.updateserial.states.DeviceScanViewState
+import com.cuchen.updateserial.utils.toHex2
+import dagger.hilt.android.internal.Contexts.getApplication
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -32,81 +40,40 @@ private const val SCAN_PERIOD = 20000L
 
 @HiltViewModel
 class SerialViewModel @Inject constructor(
-    private val bluetoothController: BluetoothController, private val serialApi: SerialAPI
-) : ViewModel() {
+    application: Application, private val repository: RemoteRepository
+) : AndroidViewModel(application) {
 
     private lateinit var scanFilters: List<ScanFilter>
     private lateinit var scanSettings: ScanSettings
     private val scanResults = mutableMapOf<String, ScanResult>()
-    private val adapter: BluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+    private val bluetoothManager =
+        getApplication<Application>().applicationContext.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+
+    private val adapter: BluetoothAdapter = bluetoothManager.adapter
     private val _viewState = MutableLiveData<DeviceScanViewState>()
     val viewState = _viewState as LiveData<DeviceScanViewState>
     private var scanCallback: DeviceScanCallback? = null
     private var scanner: BluetoothLeScanner? = null
 
-
-    private val _state = MutableStateFlow(BluetoothUiState())
-
-//    private var mGithubRepositories: MutableStateFlow<Response> = MutableStateFlow(Response(false))
-//    val githubRepositories: StateFlow<Response> get() = mGithubRepositories
-
-    val state = combine(
-        bluetoothController.scannedDevices, bluetoothController.pairedDevices, _state
-    ) { scannedDevices, pairedDevices, state ->
-        state.copy(
-            scannedDevices = scannedDevices, pairedDevices = pairedDevices
-        )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), _state.value)
-
+    var updateSerialResponse by mutableStateOf(UpdateSerialResponse())
+        private set
 
     init {
         startScan()
-
     }
-
-    /*suspend fun updateSerial(macAddr: String, deviceType: String, serialNo: String) = viewModelScope.launch{
-        Log.d(TAG, "updateSerial: ")
-        val updateSerial = serialApi.updateSerial(macAddr, deviceType, serialNo)
-
-//        return flow<Response> {
-//            val updateSerial = serialApi.updateSerial(macAddr, deviceType, serialNo)
-//
-//            emit(updateSerial)
-//            Log.d(TAG, "updateSerial 2222: ${updateSerial}")
-//        }
-    }*/
 
 
     fun updateSerial(
         macAddr: String, deviceType: String, serialNo: String
     ) {
         viewModelScope.launch {
-
-            val updateSerial = serialApi.updateSerial(macAddr, deviceType, serialNo)
-
-        }/*return flow {
-            Log.d(TAG, "updateSerial: ")
-            val updateSerial = serialApi.updateSerial(macAddr, deviceType, serialNo)
-            if (updateSerial.success)
-                emit(githubRepositories.value = updateSerial)
-
-//        return flow<Response> {
-//            val updateSerial = serialApi.updateSerial(macAddr, deviceType, serialNo)
-//
-//            emit(updateSerial)
-//            Log.d(TAG, "updateSerial 2222: ${updateSerial}")
-//        }
-        }.flowOn(Dispatchers.IO)*/
+            val updateSerial = repository.updateSerial(macAddr, deviceType, serialNo)
+            updateSerialResponse = updateSerial
+        }
     }
 
     @SuppressLint("MissingPermission")
     fun startScan() {
-//        bluetoothController.startDiscovery()
-        Log.d(TAG, "startScan: ")
-//        viewModelScope.launch {
-//            updateSerial("00067A101C13", "test", "1234567892")
-//        }
-
         scanFilters = buildScanFilters()
         scanSettings = buildScanSettings()
         if (!adapter.isMultipleAdvertisementSupported) {
@@ -138,8 +105,6 @@ class SerialViewModel @Inject constructor(
 
     private fun buildScanFilters(): List<ScanFilter> {
         val builder = ScanFilter.Builder()
-//        builder.setServiceUuid(ParcelUuid(SERVICE_UUID))
-//        builder.
         val filter = builder.build()
         return listOf(filter)
     }
@@ -158,7 +123,6 @@ class SerialViewModel @Inject constructor(
                     scanResults[device.address] = item
                 }
             }
-            Log.i(TAG, scanResults.toString())
             _viewState.value = DeviceScanViewState.ScanResults(scanResults)
         }
 
@@ -166,12 +130,13 @@ class SerialViewModel @Inject constructor(
             callbackType: Int, result: ScanResult
         ) {
             super.onScanResult(callbackType, result)
-            result.device?.let { device ->
 
-                scanResults[device.address] = result
+            if (result.scanRecord?.deviceName?.contains("CUCHEN_") == true) {
+                result.device?.let { device ->
+                    scanResults[device.address] = result
+                }
+                _viewState.value = DeviceScanViewState.ScanResults(scanResults)
             }
-            Log.i(TAG, scanResults.toString())
-            _viewState.value = DeviceScanViewState.ScanResults(scanResults)
         }
 
         override fun onScanFailed(errorCode: Int) {

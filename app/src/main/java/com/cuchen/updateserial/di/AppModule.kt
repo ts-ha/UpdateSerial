@@ -2,8 +2,10 @@ package com.cuchen.updateserial.di
 
 import android.content.Context
 import com.cuchen.updateserial.data.chat.AndroidBluetoothController
+import com.cuchen.updateserial.data.repository.RemoteRepositoryImpl
 import com.cuchen.updateserial.domin.BluetoothController
 import com.cuchen.updateserial.domin.SerialAPI
+import com.cuchen.updateserial.domin.repository.RemoteRepository
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
@@ -44,6 +46,11 @@ object AppModule {
 
 
     @Provides
+    fun provideRepository(
+        serialAPI: SerialAPI
+    ): RemoteRepository = RemoteRepositoryImpl(serialAPI = serialAPI)
+
+    @Provides
     @Singleton
     fun provideBluetoothController(@ApplicationContext context: Context): BluetoothController {
         return AndroidBluetoothController(context)
@@ -62,6 +69,7 @@ object AppModule {
         GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
             .create()
 
+
     @Singleton
     @Provides
     fun provideConverterFactory(
@@ -75,10 +83,12 @@ object AppModule {
         converterFactory: Converter.Factory
     ): Retrofit = Retrofit.Builder()
         .baseUrl(apiUrl)
-        .client(OkHttpClient.Builder().addInterceptor(
-            HttpLoggingInterceptor().setLevel(level = HttpLoggingInterceptor.Level.BODY)
+        .client(
+            OkHttpClient.Builder().addInterceptor(
+                HttpLoggingInterceptor().setLevel(level = HttpLoggingInterceptor.Level.BODY)
+            )
+                .build()
         )
-            .build())
         .addConverterFactory(converterFactory)
         .build()
 
@@ -88,22 +98,5 @@ object AppModule {
         retrofit: Retrofit
     ): SerialAPI = retrofit.create(SerialAPI::class.java)
 
-
-//    @Provides
-//    @Singleton
-//    fun provideTempHumidityReceiveManager(
-//        @ApplicationContext context: Context, bluetoothAdapter: BluetoothAdapter
-//    ): BleManager {
-//        return BleManager(bluetoothAdapter, context)
-//    }
-
-//    @Provides
-//    fun provideProfileImageRepository(
-//        storage: FirebaseStorage,
-//        db: FirebaseFirestore
-//    ): ProfileImageRepository = ProfileImageRepositoryImpl(
-//        storage = storage,
-//        db = db
-//    )
 }
 

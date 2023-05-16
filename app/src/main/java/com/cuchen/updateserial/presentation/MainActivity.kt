@@ -55,10 +55,10 @@ class MainActivity : ComponentActivity() {
             UpdateSerialTheme {
 
 
-                val state by viewModel.state.collectAsState()
+//                val state by viewModel.state.collectAsState()
 
-                val ss by viewModel.githubRepositories.collectAsState()
-                Log.d(TAG, "onCreate: $ss")
+//                val ss by viewModel.githubRepositories.collectAsState()
+//                Log.d(TAG, "onCreate: $ss")
 
                 val result = remember { mutableStateOf<Int?>(100) }
                 val launcher =

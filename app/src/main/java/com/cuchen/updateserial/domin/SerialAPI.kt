@@ -11,9 +11,29 @@ interface SerialAPI {
         @Field("macAddr") macAddr: String,
         @Field("deviceType") deviceType: String,
         @Field("serialNo") serialNo: String
-    ): Response
+    ): UpdateSerialResponse
 }
 
-data class Response(
-    val success: Boolean
-)
+
+class UpdateSerialResponse(
+    val success: Boolean = false,
+    val bean: Bean? = null,
+    val errors: List<Errors>? = null
+) {
+    class Bean(val count: Int, val mac: List<String>)
+    class Errors(val code: String, val field: String, val message: String)
+}
+
+
+sealed class Response<out T> {
+    object Loading : Response<Nothing>()
+
+    data class Success<out T>(
+        val updateSerialResponse: Response<UpdateSerialResponse>,
+    ) : Response<T>()
+
+
+    data class Failure(
+        val e: Exception
+    ) : Response<Nothing>()
+}

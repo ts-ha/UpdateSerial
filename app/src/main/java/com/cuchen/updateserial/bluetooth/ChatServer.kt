@@ -23,8 +23,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.cuchen.updateserial.data.Message
 import com.example.learningble.states.DeviceConnectionState
-import com.example.learningble.utils.MESSAGE_UUID
-import com.example.learningble.utils.SERVICE_UUID
+import com.cuchen.updateserial.utils.MESSAGE_UUID
+import com.cuchen.updateserial.utils.SERVICE_UUID
 
 private const val TAG = "ChatServerTAG"
 

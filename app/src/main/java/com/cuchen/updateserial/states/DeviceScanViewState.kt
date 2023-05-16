@@ -1,6 +1,5 @@
 package com.cuchen.updateserial.states
 
-import android.bluetooth.BluetoothDevice
 import android.bluetooth.le.ScanResult
 
 sealed class DeviceScanViewState {
