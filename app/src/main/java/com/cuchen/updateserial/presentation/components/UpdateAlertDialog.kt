@@ -16,19 +16,19 @@ fun UpdateAlertDialog() {
     val shouldDismiss = remember {
         mutableStateOf(true)
     }
-    if (shouldDismiss.value)
-        AlertDialog(onDismissRequest = { shouldDismiss.value = false }, title = {
+    if (shouldDismiss.value) AlertDialog(
+        onDismissRequest = { shouldDismiss.value = false },
+        title = {
             Text(text = "등록완료")
-        }, text = {
+        },
+        text = {
             Text(text = "등록완료 하였습니다.")
-        }, confirmButton = {
+        },
+        confirmButton = {
             TextButton(onClick = { shouldDismiss.value = false }) {
                 Text(text = "확인")
             }
         },
-
-            shape = RoundedCornerShape(24.dp)
-        )
-
-
+        shape = RoundedCornerShape(24.dp)
+    )
 }
