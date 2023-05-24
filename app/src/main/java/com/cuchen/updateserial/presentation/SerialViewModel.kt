@@ -1,5 +1,6 @@
 package com.cuchen.updateserial.presentation
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Application
 import android.bluetooth.BluetoothAdapter
@@ -10,12 +11,14 @@ import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Handler
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.toLowerCase
+import androidx.core.app.ActivityCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -58,9 +61,7 @@ class SerialViewModel @Inject constructor(
     var updateSerialResponse by mutableStateOf(UpdateSerialResponse())
         private set
 
-    init {
-        startScan()
-    }
+
 
 
     fun updateSerial(
@@ -72,8 +73,10 @@ class SerialViewModel @Inject constructor(
         }
     }
 
+
     @SuppressLint("MissingPermission")
     fun startScan() {
+        scanResults.clear()
         scanFilters = buildScanFilters()
         scanSettings = buildScanSettings()
         if (!adapter.isMultipleAdvertisementSupported) {
@@ -85,14 +88,13 @@ class SerialViewModel @Inject constructor(
             scanner = adapter.bluetoothLeScanner
             _viewState.value = DeviceScanViewState.ActiveScan
             Handler().postDelayed({ stopScanning() }, SCAN_PERIOD)
-
             scanCallback = DeviceScanCallback()
             scanner?.startScan(scanFilters, scanSettings, scanCallback)
         }
     }
 
     fun stopScan() {
-//        bluetoothController.stopDiscovery()
+        scanResults.clear()
         stopScanning()
     }
 

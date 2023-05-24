@@ -1,4 +1,4 @@
-package com.example.learningble.states
+package com.cuchen.updateserial.states
 
 import android.bluetooth.BluetoothDevice
 

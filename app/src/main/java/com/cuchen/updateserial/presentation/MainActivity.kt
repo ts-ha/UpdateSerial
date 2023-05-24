@@ -3,7 +3,9 @@ package com.cuchen.updateserial.presentation
 
 import android.Manifest
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothManager
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -20,7 +22,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -40,6 +41,7 @@ import com.cuchen.updateserial.ui.theme.UpdateSerialTheme
 import com.karumi.dexter.Dexter
 import com.karumi.dexter.MultiplePermissionsReport
 import com.karumi.dexter.PermissionToken
+import com.karumi.dexter.listener.PermissionDeniedResponse
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -47,20 +49,64 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
 
-    val viewModel: SerialViewModel by viewModels()
+    private val viewModel: SerialViewModel by viewModels()
+
+    private val bluetoothManager by lazy {
+        applicationContext.getSystemService(BluetoothManager::class.java)
+    }
+    private val bluetoothAdapter by lazy {
+        bluetoothManager?.adapter
+    }
+    private val isBluetoothEnabled: Boolean
+        get() = bluetoothAdapter?.isEnabled == true
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val enableBluetoothLauncher = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { /* Not needed */ }
+
+        val permissionLauncher = registerForActivityResult(
+            ActivityResultContracts.RequestMultiplePermissions()
+        ) { perms ->
+            val canEnableBluetooth = if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                ChatServer.startServer(application)
+                viewModel.startScan()
+                perms[Manifest.permission.BLUETOOTH_CONNECT] == true
+            } else true
+
+            if(canEnableBluetooth && !isBluetoothEnabled) {
+                enableBluetoothLauncher.launch(
+                    Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+                )
+            }
+        }
+
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            permissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.BLUETOOTH_SCAN,
+                    Manifest.permission.BLUETOOTH_CONNECT,
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.BLUETOOTH_ADVERTISE,
+                    Manifest.permission.CAMERA,
+
+
+                    Manifest.permission.BLUETOOTH,
+                    Manifest.permission.BLUETOOTH_ADMIN
+                )
+            )
+        }
+
+
         setContent {
             UpdateSerialTheme {
 
 
-//                val state by viewModel.state.collectAsState()
-
-//                val ss by viewModel.githubRepositories.collectAsState()
-//                Log.d(TAG, "onCreate: $ss")
-
-                val result = remember { mutableStateOf<Int?>(100) }
+              /*  val result = remember { mutableStateOf<Int?>(100) }
                 val launcher =
                     rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
                         result.value = it.resultCode
@@ -76,19 +122,22 @@ class MainActivity : ComponentActivity() {
                             Manifest.permission.BLUETOOTH_CONNECT,
                             Manifest.permission.BLUETOOTH_SCAN,
                             Manifest.permission.BLUETOOTH,
-                            Manifest.permission.BLUETOOTH_ADMIN,
+                            Manifest.permission.BLUETOOTH_ADMIN
                         )
                         .withListener(object : MultiplePermissionsListener {
                             override fun onPermissionsChecked(report: MultiplePermissionsReport) {
                                 val intent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
                                 launcher.launch(intent)
+//                                ChatServer.startServer(application)
+//                                viewModel.startScan()
+                                Log.d(TAG, "onPermissionsChecked: ")
                             }
 
                             override fun onPermissionRationaleShouldBeShown(
                                 p0: MutableList<com.karumi.dexter.listener.PermissionRequest>?,
                                 p1: PermissionToken?
                             ) {
-
+                                Log.d(TAG, "onPermissionRationaleShouldBeShown: ")
                             }
 
                         })
@@ -101,8 +150,10 @@ class MainActivity : ComponentActivity() {
                     if (result.value == RESULT_OK) {
                         ChatServer.startServer(application)
                         viewModel.startScan()
+                    } else {
+                        Log.d(TAG, "onPermissionRationaleShouldBeShown: ")
                     }
-                }
+                }*/
 
                 Surface(
                     modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background
@@ -132,17 +183,19 @@ class MainActivity : ComponentActivity() {
 
                         val deviceScanningState by viewModel.viewState.observeAsState()
 
-                        val deviceConnectionState by ChatServer.deviceConnection.observeAsState()
+//                        val deviceConnectionState by ChatServer.deviceConnection.observeAsState()
+//
+//                        var isChatOpen by remember {
+//                            mutableStateOf(false)
+//                        }
+                        deviceScanningState?.let {
+                            DeviceScanCompose.DeviceScan(
+                                deviceScanViewState = it,
+                                viewModel = viewModel,
+                                barCodeVal = barCodeVal.value
+                            ) {
 
-                        var isChatOpen by remember {
-                            mutableStateOf(false)
-                        }
-                        DeviceScanCompose.DeviceScan(
-                            deviceScanViewState = deviceScanningState!!,
-                            viewModel = viewModel,
-                            barCodeVal = barCodeVal.value
-                        ){
-
+                            }
                         }
                         /*DeviceScreen(
                             state = state,
