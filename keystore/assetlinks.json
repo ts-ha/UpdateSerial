@@ -1,0 +1,1 @@
+[{"relation": ["delegate_permission/common.handle_all_urls"],"target": {"namespace": "android_app","package_name": "kr.co.cuchen.app","sha256_cert_fingerprints":["85:66:38:F4:7B:66:B8:00:29:DA:F5:ED:4D:E3:52:20:7F:E9:69:1F:B4:D2:65:B3:F0:C9:2F:5A:57:94:FD:17"]}}]

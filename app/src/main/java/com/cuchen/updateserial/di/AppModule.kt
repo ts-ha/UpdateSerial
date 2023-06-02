@@ -59,7 +59,7 @@ object AppModule {
     @Singleton
     @Provides
     @Named("API_URI")
-    fun provideWebAPI(): String = "https://dev.on.cuchen.com/smartcooking/api/"
+    fun provideWebAPI(): String = "https://on.cuchen.com/smartcooking/api/"
 //        if (BuildConfig.DEBUG) "https://dev.on.cuchen.com/smartcooking/api/"
 //        else "https://on.cuchen.com/smartcooking/api/"
 
